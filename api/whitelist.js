@@ -1,40 +1,36 @@
-import fs from 'fs';
-import path from 'path';
-
-const whitelistPath = path.resolve('./whitelist.txt');
-
-export default function handler(req, res) {
+export default async function handler(req, res) {
+  // Only allow POST
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, reason: 'Method not allowed' });
   }
 
-  const { hwid, action } = req.body;
+  // Read plain text from body
+  const buffers = [];
+  for await (const chunk of req) {
+    buffers.push(chunk);
+  }
+  const rawBody = Buffer.concat(buffers).toString().trim();
+
+  // Expect format: hwid:ACTION or hwid only
+  const [hwid, actionRaw] = rawBody.split(':');
+  const action = actionRaw ? actionRaw.trim().toLowerCase() : 'check';
 
   if (!hwid) {
     return res.status(400).json({ success: false, reason: 'No HWID provided' });
   }
 
-  // Load existing HWIDs from file
-  let whitelist = new Set();
-  try {
-    const data = fs.readFileSync(whitelistPath, 'utf8');
-    whitelist = new Set(data.split('\n').filter(Boolean));
-  } catch (err) {
-    // If file doesn't exist, create it later
-  }
+  // Example whitelist (replace with real storage)
+  const whitelist = new Set([
+    "eec44867-c4e7-4449-bae2-4c16eb101c58",
+    "sample-hwid-2"
+  ]);
 
   if (action === 'check') {
-    if (whitelist.has(hwid)) {
-      return res.status(200).json({ success: true });
-    } else {
-      return res.status(200).json({ success: false, reason: 'Not whitelisted' });
-    }
+    return res.status(200).json({ success: whitelist.has(hwid) });
   }
 
   if (action === 'add') {
-    if (!whitelist.has(hwid)) {
-      fs.appendFileSync(whitelistPath, `${hwid}\n`);
-    }
+    whitelist.add(hwid);
     return res.status(200).json({ success: true });
   }
 

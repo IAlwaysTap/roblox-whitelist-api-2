@@ -5,8 +5,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, reason: "HWID or action missing" });
   }
 
-  // Simulated database (resets on deploy)
-  global.whitelist = global.whitelist || new Set(["test-hwid"]);
+  global.whitelist = global.whitelist || new Set(["sample-hwid-1"]);
 
   if (action === "check") {
     const isWhitelisted = global.whitelist.has(hwid);
@@ -18,5 +17,5 @@ export default async function handler(req, res) {
     return res.json({ success: true });
   }
 
-  res.status(400).json({ success: false, reason: "Invalid action" });
+  return res.status(400).json({ success: false, reason: "Invalid action" });
 }

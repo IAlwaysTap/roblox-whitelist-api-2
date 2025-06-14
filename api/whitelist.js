@@ -6,24 +6,27 @@ const whitelistPath = path.resolve('./whitelist.txt');
 function loadWhitelist() {
   try {
     const data = fs.readFileSync(whitelistPath, 'utf8');
+    // Split by newline, filter out empty lines, store in a Set for quick lookup
     return new Set(data.split('\n').filter(Boolean));
   } catch {
+    // File doesn't exist or empty
     return new Set();
   }
 }
 
 function saveWhitelist(whitelist) {
+  // Write all HWIDs, one per line, no quotes or extras, with trailing newline
   fs.writeFileSync(whitelistPath, Array.from(whitelist).join('\n') + '\n', 'utf8');
 }
 
 export default function handler(req, res) {
-  // CORS headers
+  // CORS headers to allow requests from anywhere
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
+  // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
-    // Handle preflight request
     res.status(200).end();
     return;
   }
@@ -34,7 +37,7 @@ export default function handler(req, res) {
 
   const { hwid, action } = req.body;
 
-  if (!hwid) {
+  if (!hwid || typeof hwid !== 'string' || hwid.trim() === '') {
     return res.status(400).json({ success: false, reason: 'No HWID provided' });
   }
 

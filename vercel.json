@@ -1,9 +1,6 @@
 {
   "version": 2,
   "routes": [
-    {
-      "src": "/api/whitelist",
-      "dest": "/api/whitelist.js"
-    }
+    { "src": "/api/whitelist", "dest": "/api/whitelist.js" }
   ]
 }

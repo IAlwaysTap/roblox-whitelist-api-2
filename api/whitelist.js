@@ -8,7 +8,6 @@ function loadWhitelist() {
     const data = fs.readFileSync(whitelistPath, 'utf8');
     return new Set(data.split('\n').filter(Boolean));
   } catch {
-    // File doesn't exist or empty
     return new Set();
   }
 }
@@ -18,6 +17,17 @@ function saveWhitelist(whitelist) {
 }
 
 export default function handler(req, res) {
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    // Handle preflight request
+    res.status(200).end();
+    return;
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, reason: 'Method not allowed' });
   }

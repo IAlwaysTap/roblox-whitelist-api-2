@@ -1,5 +1,23 @@
+import fs from 'fs';
+import path from 'path';
+
+const whitelistPath = path.resolve('./whitelist.txt');
+
+function loadWhitelist() {
+  try {
+    const data = fs.readFileSync(whitelistPath, 'utf8');
+    return new Set(data.split('\n').filter(Boolean));
+  } catch {
+    // File doesn't exist or empty
+    return new Set();
+  }
+}
+
+function saveWhitelist(whitelist) {
+  fs.writeFileSync(whitelistPath, Array.from(whitelist).join('\n') + '\n', 'utf8');
+}
+
 export default function handler(req, res) {
-  // Only allow POST
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, reason: 'Method not allowed' });
   }
@@ -10,12 +28,7 @@ export default function handler(req, res) {
     return res.status(400).json({ success: false, reason: 'No HWID provided' });
   }
 
-  // Example whitelist stored in memory
-  // In production, replace with DB or persistent storage
-  const whitelist = new Set([
-    "sample-hwid-1",
-    "sample-hwid-2"
-  ]);
+  const whitelist = loadWhitelist();
 
   if (action === 'check') {
     if (whitelist.has(hwid)) {
@@ -26,7 +39,10 @@ export default function handler(req, res) {
   }
 
   if (action === 'add') {
-    whitelist.add(hwid);
+    if (!whitelist.has(hwid)) {
+      whitelist.add(hwid);
+      saveWhitelist(whitelist);
+    }
     return res.status(200).json({ success: true });
   }
 
